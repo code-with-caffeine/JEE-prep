@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JEE Exam Preparation Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f4f6f9;
+            --text-primary: #2c3e50;
+            --accent-blue: #3498db;
+            --accent-green: #2ecc71;
+            --card-bg: white;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        .preparation-dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .subject-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        .subject-card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            transform: perspective(1000px);
+            transition: all 0.4s ease;
+        }
+        .subject-card:hover {
+            transform: scale(1.02) perspective(1000px) rotateX(5deg);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+        .subject-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            text-align: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--accent-blue);
+            padding-bottom: 0.5rem;
+        }
+        .chapter-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        .chapter-item {
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-primary);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .chapter-item:hover {
+            background-color: var(--accent-blue);
+            color: white;
+        }
+        .chapter-item:hover .question-tracker{
+            color: black;
+        }
+        .chapter-checkbox {
+            margin-right: 0.5rem;
+        }
+        .chapter-details {
+            display: none;
+            background-color: #f9f9f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }
+        .completed {
+            text-decoration: line-through;
+            color: var(--accent-green);
+        }
+        .question-tracker {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .question-count {
+            width: 70px;
+            padding: 0.25rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        @media (max-width: 1024px) {
+            .subject-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            .subject-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="preparation-dashboard">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">JEE Preparation Hub</h1>
+        </div>
+        <div id="preparationTracker"></div>
+    </div>
+
+    <script>
+        const subjects = {
+            Maths: {
+                chapters: [
+                    'Sets & Relations', 'Complex Numbers', 'Quadratic Equations', 
+                    'Sequences', 'Trigonometry', 'Coordinate Geometry', 
+                    '3D Geometry', 'Linear Programming', 'Probability', 'Matrices'
+                ]
+            },
+            Physics: {
+                chapters: [
+                    'Mechanics', 'Gravitation', 'Waves', 'Thermodynamics', 
+                    'Electrostatics', 'Current Electricity', 'Magnetism', 
+                    'Optics', 'Modern Physics', 'Semiconductors'
+                ]
+            },
+            Chemistry: {
+                chapters: [
+                    'Physical Chemistry', 'Organic Chemistry', 'Inorganic Chemistry', 
+                    'Atomic Structure', 'Chemical Bonding', 'Thermochemistry', 
+                    'Equilibrium', 'Electrochemistry', 'Chemical Kinetics', 'Periodicity'
+                ]
+            }
+        };
+
+        class JEEPreparationTracker {
+            constructor() {
+                this.loadProgress();
+                this.render();
+                this.attachEventListeners();
+            }
+
+            loadProgress() {
+                this.chapterStatus = JSON.parse(localStorage.getItem('jeeChapterStatus')) || {};
+                this.questionCounts = JSON.parse(localStorage.getItem('jeeQuestionCounts')) || {};
+            }
+
+            saveProgress() {
+                localStorage.setItem('jeeChapterStatus', JSON.stringify(this.chapterStatus));
+                localStorage.setItem('jeeQuestionCounts', JSON.stringify(this.questionCounts));
+            }
+
+            render() {
+                const trackerDiv = document.getElementById('preparationTracker');
+                trackerDiv.innerHTML = '';
+                const subjectContainer = document.createElement('div');
+                subjectContainer.className = 'subject-container';
+
+                Object.entries(subjects).forEach(([subject, data]) => {
+                    const subjectCard = document.createElement('div');
+                    subjectCard.className = 'subject-card';
+                    
+                    const subjectTitle = document.createElement('div');
+                    subjectTitle.className = 'subject-title';
+                    subjectTitle.textContent = subject;
+                    subjectCard.appendChild(subjectTitle);
+
+                    const chapterList = document.createElement('div');
+                    chapterList.className = 'chapter-list';
+
+                    data.chapters.forEach(chapter => {
+                        const chapterItem = document.createElement('div');
+                        chapterItem.className = 'chapter-item';
+                        chapterItem.innerHTML = `
+                            <input type="checkbox" class="chapter-checkbox" 
+                                   data-subject="${subject}" 
+                                   data-chapter="${chapter}"
+                                   ${this.chapterStatus[`${subject}-${chapter}`] ? 'checked' : ''}>
+                            <span class="${this.chapterStatus[`${subject}-${chapter}`] ? 'completed' : ''}">${chapter}</span>
+                        `;
+
+                        const chapterDetails = document.createElement('div');
+                        chapterDetails.className = 'chapter-details';
+                        chapterDetails.innerHTML = `
+                            <div class="question-tracker">
+                                Questions Solved: 
+                                <input type="number" class="question-count" 
+                                       data-subject="${subject}" 
+                                       data-chapter="${chapter}"
+                                       value="${this.questionCounts[`${subject}-${chapter}`] || 0}">
+                            </div>
+                        `;
+
+                        chapterItem.appendChild(chapterDetails);
+                        chapterList.appendChild(chapterItem);
+                    });
+
+                    subjectCard.appendChild(chapterList);
+                    subjectContainer.appendChild(subjectCard);
+                });
+
+                trackerDiv.appendChild(subjectContainer);
+            }
+
+            attachEventListeners() {
+                const tracker = document.getElementById('preparationTracker');
+                
+                tracker.addEventListener('change', (e) => {
+                    if (e.target.classList.contains('chapter-checkbox')) {
+                        const subject = e.target.dataset.subject;
+                        const chapter = e.target.dataset.chapter;
+                        const chapterSpan = e.target.nextElementSibling;
+                        
+                        this.chapterStatus[`${subject}-${chapter}`] = e.target.checked;
+                        chapterSpan.classList.toggle('completed', e.target.checked);
+                        this.saveProgress();
+                    }
+
+                    if (e.target.classList.contains('question-count')) {
+                        const subject = e.target.dataset.subject;
+                        const chapter = e.target.dataset.chapter;
+                        
+                        this.questionCounts[`${subject}-${chapter}`] = e.target.value;
+                        this.saveProgress();
+                }
+                });
+
+                tracker.addEventListener('click', (e) => {
+                    const chapterItem = e.target.closest('.chapter-item');
+                    const questionCount = e.target.closest('.question-count');
+                    
+                    if (questionCount) {
+                        e.stopPropagation();
+                        return;
+                    }
+
+                    if (chapterItem && !e.target.closest('.chapter-checkbox')) {
+                        const chapterDetails = chapterItem.querySelector('.chapter-details');
+                        chapterDetails.style.display = 
+                            chapterDetails.style.display === 'block' ? 'none' : 'block';
+                    }
+                });
+            }
+        }
+
+        new JEEPreparationTracker();
+    </script>
+</body>
+</html>
